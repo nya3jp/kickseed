@@ -1,0 +1,20 @@
+Source: kickseed
+Section: debian-installer
+Priority: optional
+Maintainer: Colin Watson <cjwatson@ubuntu.com>
+Build-Depends: debhelper (>= 4.2), dpkg-dev (>= 1.9)
+Standards-Version: 3.6.1
+
+Package: kickseed-common
+XC-Package-Type: udeb
+Architecture: all
+Priority: standard
+Description: Common files for Kickstart compatibility
+ This package reads Kickstart files and preseeds an installation with them,
+ translating to the d-i preseeding infrastructure.
+
+Package: initrd-kickseed
+XC-Package-Type: udeb
+Architecture: all
+Depends: cdebconf-udeb, kickseed-common, preseed-common
+Description: Load Kickstart file from the initrd
