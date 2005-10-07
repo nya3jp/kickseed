@@ -4,6 +4,8 @@ keyboard uk
 autostep
 auth --enablemd5 --enableshadow
 bootloader --location=mbr
+device eth module1 --opts="aic152x=0x340 io=11"
+device scsi module2 --opts="testopts=testvalue"
 firewall --disabled
 interactive
 lilo
@@ -17,6 +19,8 @@ timezone --utc America/New_York
 url --url http://archive.ubuntu.com/ubuntu
 user cjwatson --fullname="Colin Watson" --password="foobar"
 xconfig --resolution 1280x1024
+preseed test/question1 string hello
+preseed --owner base-config test/question2 boolean true
 
 %packages
 @ Ubuntu Desktop

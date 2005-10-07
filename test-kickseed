@@ -2,13 +2,14 @@
 
 HANDLERS=handlers
 SPOOL="$(mktemp -d)"
+SUPPORTEDLOCALES=/usr/share/localechooser/SUPPORTED-short
 
 trap 'rm -rf "$SPOOL"' EXIT HUP INT QUIT TERM
 
 . kickseed.sh
 
 ks_log () {
-	echo "LOG: $@"
+	echo "LOG: $@" >&2
 }
 
 ks_preseed () {

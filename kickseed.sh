@@ -10,9 +10,12 @@ fi
 if [ -z "$POSTSPOOL" ]; then
 	POSTSPOOL="$SPOOL/parse/post"
 fi
+if [ -z "$SUPPORTEDLOCALES" ]; then
+	SUPPORTEDLOCALES=/etc/SUPPORTED-short
+fi
 
 warn () {
-	echo "$@" >&2
+	ks_log "$@"
 }
 
 die () {
@@ -49,6 +52,7 @@ save_post_script () {
 			i="$(($i + 1))"
 		done
 		mv "$SPOOL/parse/post.section" "$POSTSPOOL/$i.script"
+		chmod +x "$POSTSPOOL/$i.script"
 		if [ "$post_chroot" = 1 ]; then
 			touch "$POSTSPOOL/$i.chroot"
 		else
@@ -69,7 +73,7 @@ kickseed () {
 
 	# Parse and execute %pre sections first.
 	SECTION=main
-	(cat "$1"; echo %final) | while read line; do
+	while read line; do
 		keyword="${line%% *}"
 		case $keyword in
 			%pre)
@@ -78,11 +82,7 @@ kickseed () {
 				> "$SPOOL/parse/pre.section"
 				continue
 				;;
-			%packages|%post|%final)
-				if [ -e "$SPOOL/parse/pre.section" ]; then
-					ks_run_script pre /bin/sh 0 "$SPOOL/parse/pre.section"
-					rm -f "$SPOOL/parse/pre.section"
-				fi
+			%packages|%post)
 				SECTION="${keyword#%}"
 				continue
 				;;
@@ -90,7 +90,14 @@ kickseed () {
 		if [ "$SECTION" = pre ]; then
 			echo "$line" >> "$SPOOL/parse/pre.section"
 		fi
-	done
+	done < "$1"
+	if [ -e "$SPOOL/parse/pre.section" ]; then
+		chmod +x "$SPOOL/parse/pre.section"
+		if ! ks_run_script pre /bin/sh 0 "$SPOOL/parse/pre.section"; then
+			warn "%pre script exited with error code $?"
+		fi
+		rm -f "$SPOOL/parse/pre.section"
+	fi
 
 	# Parse all other sections.
 	SECTION=main
@@ -140,6 +147,10 @@ kickseed () {
 			# Delegate to directive handlers.
 			if type "${keyword}_handler" >/dev/null 2>&1; then
 				args="${line#*[ 	]}"
+				if [ "$args" = "$line" ]; then
+					# No arguments.
+					args=
+				fi
 				# This gets ...='\$foo' wrong, but it's
 				# better than the alternative (broken
 				# crypted passwords) for now.
@@ -159,6 +170,12 @@ kickseed () {
 				# TODO: temporary hack to make at least the
 				# standard desktop work
 				case $group in
+					Ubuntu\ Standard)
+						echo "~tubuntu-standard" >> "$SPOOL/parse/$SECTION.section"
+						;;
+					Kubuntu\ Standard)
+						echo "~tkubuntu-standard" >> "$SPOOL/parse/$SECTION.section"
+						;;
 					Ubuntu\ Desktop)
 						echo "~tubuntu-desktop" >> "$SPOOL/parse/$SECTION.section"
 						;;
@@ -254,6 +271,8 @@ kickseed_post () {
 		if [ -e "${script%.script}.chroot" ]; then
 			CHROOTED=1
 		fi
-		ks_run_script post /bin/sh "$CHROOTED" "$script"
+		if ! ks_run_script post /bin/sh "$CHROOTED" "$script"; then
+			warn "%post script exited with error code $?"
+		fi
 	done
 }

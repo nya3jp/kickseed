@@ -1,3 +1,98 @@
+kickseed (0.31) breezy; urgency=low
+
+  * Add "Ubuntu Standard" and "Kubuntu Standard" package groups, which
+    install the ubuntu-standard and kubuntu-standard tasks respectively.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Fri,  7 Oct 2005 16:38:07 +0100
+
+kickseed (0.30) breezy; urgency=low
+
+  * Fix NFS mount error dialog.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Mon,  8 Aug 2005 18:29:31 +0100
+
+kickseed (0.29) breezy; urgency=low
+
+  * Update timezone to be able to cope with clock-setup and tzsetup udebs.
+  * Display an error if we can't fetch the Kickstart file from HTTP/FTP, or
+    if we can't mount the given NFS server.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Mon,  8 Aug 2005 15:04:13 +0100
+
+kickseed (0.28) breezy; urgency=low
+
+  * Make 'lang' preseed debian-installer/locale as well as preseed/locale,
+    in order to work with localechooser >= 0.07.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Tue, 19 Jul 2005 17:23:27 +0100
+
+kickseed (0.27) breezy; urgency=low
+
+  * Use 'mount -o nolock' when retrieving Kickstart files over NFS, which is
+    massively faster since we aren't running the usual userspace support.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Mon, 20 Jun 2005 19:05:02 +0100
+
+kickseed (0.26) breezy; urgency=low
+
+  * Implement device --opts, now that hw-detect supports it.
+  * Implement bootloader --password and --md5pass options.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Mon,  6 Jun 2005 12:17:24 +0100
+
+kickseed (0.25) breezy; urgency=low
+
+  * Send stderr from %pre scripts to /var/log/messages.
+  * Don't send %post stdout to /var/log/messages, and don't truncate that
+    file!
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Fri,  6 May 2005 20:39:09 +0100
+
+kickseed (0.24) breezy; urgency=low
+
+  * Add native support for custom d-i preseeding. The syntax is 'preseed
+    [--owner PACKAGE] KEY TYPE VALUE'. The owner package defaults to "d-i".
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Thu,  5 May 2005 16:42:34 +0100
+
+kickseed (0.23) breezy; urgency=low
+
+  * Execute %pre sections without redirecting stdin, so that it's possible
+    to use debconf from them.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed,  4 May 2005 17:17:41 +0100
+
+kickseed (0.22) breezy; urgency=low
+
+  * Make sure %pre and %post scripts are executable, so that debconf can
+    re-exec them.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed,  4 May 2005 10:35:08 +0100
+
+kickseed (0.21) breezy; urgency=low
+
+  * Make 'url' preseed second-stage mirror configuration too.
+  * Replace $OPTARG with $2 everywhere; fixes 'clearpart --drives'.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Fri, 15 Apr 2005 15:05:51 +0100
+
+kickseed (0.20) breezy; urgency=low
+
+  * Send warnings during installation to syslog, not stderr.
+  * Fix handler arguments in the case where no arguments were passed to a
+    command.
+  * Fix langsupport to conform to Kickstart documentation and Anaconda.
+    - If no non-option arguments were passed to langsupport, support all
+      locales, per the Kickstart documentation. Yes, this will be slow. In
+      that case, default to en_US.UTF-8 if there's no default set either,
+      per Anaconda.
+    - Otherwise, default to the first locale selected if there's no default
+      set, per Anaconda.
+  * Tolerate %pre and %post scripts exiting non-zero (log a warning rather
+    than exiting).
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Thu, 14 Apr 2005 12:46:55 +0100
+
 kickseed (0.19) hoary; urgency=low
 
   * Very basic package group support, mapping package groups to tasks. Any
