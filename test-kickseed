@@ -1,7 +1,7 @@
 #! /bin/sh -e
 
 HANDLERS=handlers
-SPOOL="$(mktemp -d)"
+SPOOL="$(mktemp -d /tmp/kickseed.XXXXXX)"
 SUPPORTEDLOCALES=/usr/share/localechooser/SUPPORTED-short
 
 trap 'rm -rf "$SPOOL"' EXIT HUP INT QUIT TERM
@@ -24,6 +24,12 @@ ks_run_script () {
 
 	echo "Would run $TYPE script $SCRIPT using interpreter $INTERPRETER (chrooted: $CHROOTED):"
 	cat "$SCRIPT"
+	echo
+}
+
+ks_write_script () {
+	echo "Would write executable script $1:"
+	cat
 	echo
 }
 
