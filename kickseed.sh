@@ -55,6 +55,10 @@ save_post_script () {
 		chmod +x "$POSTSPOOL/$i.script"
 		if [ "$post_chroot" = 1 ]; then
 			touch "$POSTSPOOL/$i.chroot"
+			if [ "$post_interpreter" ]; then
+				echo "$post_interpreter" \
+					> "$POSTSPOOL/$i.interpreter"
+			fi
 		else
 			rm -f "$POSTSPOOL/$i.chroot"
 		fi
@@ -128,7 +132,12 @@ kickseed () {
 			continue
 		elif [ "$keyword" = '%post' ]; then
 			save_post_script
-			post_handler_section "${line#*[ 	]}"
+			args="${line#*[ 	]}"
+			if [ "$args" = "$line" ]; then
+				# No arguments.
+				args=
+			fi
+			eval post_handler_section "$args"
 			SECTION=post
 			> "$SPOOL/parse/post.section"
 			continue
@@ -284,7 +293,7 @@ kickseed_post () {
 		[ -d "$dir" ] || continue
 		name="${dir##*/}"
 		if type "${name%.handler}_post" >/dev/null 2>&1; then
-			eval "${name%.handler}_post"
+			ks_run_handler "${name%.handler}_post"
 		else
 			warn "Missing post-installation handler: $name"
 		fi
@@ -298,7 +307,11 @@ kickseed_post () {
 		if [ -e "${script%.script}.chroot" ]; then
 			CHROOTED=1
 		fi
-		if ! ks_run_script post /bin/sh "$CHROOTED" "$script"; then
+		INTERPRETER=/bin/sh
+		if [ -e "${script%.script}.interpreter" ]; then
+			INTERPRETER="$(cat "${script%.script}.interpreter")"
+		fi
+		if ! ks_run_script post "$INTERPRETER" "$CHROOTED" "$script"; then
 			warn "%post script exited with error code $?"
 		fi
 	done

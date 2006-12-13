@@ -2,7 +2,7 @@ lang en_GB
 langsupport --default=en_US de_DE xh_ZA
 keyboard uk
 autostep
-auth --enablemd5 --enableshadow
+auth --enablemd5 --enableshadow --enablenis
 bootloader --location=mbr
 device eth module1 --opts="aic152x=0x340 io=11"
 device scsi module2 --opts="testopts=testvalue"
@@ -33,13 +33,14 @@ openssh-server
 
 echo "This is a %pre script."
 echo "It does nothing very interesting."
-%post
-#! /bin/sh
-
-echo "This is a %post script."
-echo "It does nothing very interesting, in a chroot."
-%post --nochroot
+%post --nochroot --interpreter /bin/dash
 #! /bin/sh
 
 echo "This is a %post script."
 echo "It does nothing very interesting, outside a chroot."
+echo "A warning should be printed for the attempt to use dash."
+%post --interpreter=/bin/bash
+#! /bin/bash
+
+echo "This is a %post script."
+echo "It does nothing very interesting, in a chroot."
