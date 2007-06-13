@@ -1,3 +1,17 @@
+kickseed (0.45) gutsy; urgency=low
+
+  * Make ksdevice=link equivalent to leaving out ksdevice, since that's
+    netcfg's default behaviour.
+  * Make ksdevice=bootif emit a warning and be equivalent to leaving out
+    ksdevice for now. Once netcfg supports being preseeded with a MAC
+    address, this can be supported.
+  * Support 'part swap --recommended' (thanks, Rohit Kumar Mehta).
+  * I'm not sure how swap partition preseeding ever worked, because the
+    filesystem slot in the recipe is supposed to be "linux-swap", not
+    "swap". Fixed.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed, 13 Jun 2007 21:50:01 +0100
+
 kickseed (0.44) feisty; urgency=low
 
   * Support --interpreter for %post scripts without --nochroot (pointed out
