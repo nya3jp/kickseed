@@ -181,11 +181,8 @@ kickseed () {
 				# TODO: temporary hack to make at least the
 				# standard desktop work
 				case $group in
-					Ubuntu\ Standard)
-						echo 'task:ubuntu-standard' >> "$SPOOL/parse/$SECTION.section"
-						;;
-					Kubuntu\ Standard)
-						echo 'task:kubuntu-standard' >> "$SPOOL/parse/$SECTION.section"
+					*\ Standard)
+						echo 'task:standard' >> "$SPOOL/parse/$SECTION.section"
 						;;
 					Ubuntu\ Desktop)
 						echo 'task:ubuntu-desktop' >> "$SPOOL/parse/$SECTION.section"
@@ -266,10 +263,6 @@ kickseed () {
 			esac
 			pattern="$pattern!$element"
 		done
-		# introduced in base-config 2.61ubuntu2; Debian would need
-		# tasksel preseeding instead
-		ks_preseed base-config base-config/package-selection string \
-			"$pattern"
 		# requires pkgsel 0.04ubuntu1; obsolete as of pkgsel
 		# 0.07ubuntu1
 		ks_preseed d-i pkgsel/install-pattern string "$pattern"
@@ -277,14 +270,12 @@ kickseed () {
 		ks_preseed tasksel tasksel/first multiselect "$tasklist"
 		ks_preseed d-i pkgsel/include string "$packagelist"
 		if $hasnegatives; then
-			warn "exclusions in %packages not supported as of Ubuntu 6.10; remove them manually in %post instead"
+			warn "exclusions in %packages not supported; remove them manually in %post instead"
 		fi
 	fi
 
 	# Kickstart installations always run at critical priority.
 	ks_preseed d-i debconf/priority 'select' critical
-	# TODO: not in Debian
-	ks_preseed base-config base-config/priority 'select' critical
 }
 
 kickseed_post () {
