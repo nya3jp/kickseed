@@ -10,9 +10,12 @@ fi
 if [ -z "$POSTSPOOL" ]; then
 	POSTSPOOL="$SPOOL/parse/post"
 fi
+if [ -z "$SUPPORTEDLOCALES" ]; then
+	SUPPORTEDLOCALES=/etc/SUPPORTED-short
+fi
 
 warn () {
-	echo "$@" >&2
+	ks_log "$@"
 }
 
 die () {
@@ -49,8 +52,13 @@ save_post_script () {
 			i="$(($i + 1))"
 		done
 		mv "$SPOOL/parse/post.section" "$POSTSPOOL/$i.script"
+		chmod +x "$POSTSPOOL/$i.script"
 		if [ "$post_chroot" = 1 ]; then
 			touch "$POSTSPOOL/$i.chroot"
+			if [ "$post_interpreter" ]; then
+				echo "$post_interpreter" \
+					> "$POSTSPOOL/$i.interpreter"
+			fi
 		else
 			rm -f "$POSTSPOOL/$i.chroot"
 		fi
@@ -69,20 +77,17 @@ kickseed () {
 
 	# Parse and execute %pre sections first.
 	SECTION=main
-	(cat "$1"; echo %final) | while read line; do
-		keyword="${line%% *}"
+	while read line; do
+		line="${line%%}"
+		keyword="${line%%[ 	]*}"
 		case $keyword in
 			%pre)
 				SECTION=pre
-				pre_handler_section "${line#* }"
+				pre_handler_section "${line#*[ 	]}"
 				> "$SPOOL/parse/pre.section"
 				continue
 				;;
-			%packages|%post|%final)
-				if [ -e "$SPOOL/parse/pre.section" ]; then
-					ks_run_script pre /bin/sh 0 "$SPOOL/parse/pre.section"
-					rm -f "$SPOOL/parse/pre.section"
-				fi
+			%packages|%post)
 				SECTION="${keyword#%}"
 				continue
 				;;
@@ -90,16 +95,24 @@ kickseed () {
 		if [ "$SECTION" = pre ]; then
 			echo "$line" >> "$SPOOL/parse/pre.section"
 		fi
-	done
+	done < "$1"
+	if [ -e "$SPOOL/parse/pre.section" ]; then
+		chmod +x "$SPOOL/parse/pre.section"
+		if ! ks_run_script pre /bin/sh 0 "$SPOOL/parse/pre.section"; then
+			warn "%pre script exited with error code $?"
+		fi
+		rm -f "$SPOOL/parse/pre.section"
+	fi
 
 	# Parse all other sections.
 	SECTION=main
 	(while read line; do
-		keyword="${line%% *}"
+		line="${line%%}"
+		keyword="${line%%[ 	]*}"
 		# Deal with %include directives.
 		if [ "$keyword" = '%include' ]; then
-			rest="${line#* }"
-			arg="${rest%% *}"
+			rest="${line#*[ 	]}"
+			arg="${rest%%[ 	]*}"
 			cat "$arg"
 		elif [ "$keyword" = '%final' ]; then
 			die "%final reserved for internal use"
@@ -108,7 +121,7 @@ kickseed () {
 		fi
 	done < "$1"; echo %final) | while read line; do
 		# Work out the section.
-		keyword="${line%% *}"
+		keyword="${line%%[ 	]*}"
 		if [ "$keyword" = '%packages' ]; then
 			save_post_script
 			SECTION=packages
@@ -119,7 +132,12 @@ kickseed () {
 			continue
 		elif [ "$keyword" = '%post' ]; then
 			save_post_script
-			post_handler_section "${line#* }"
+			args="${line#*[ 	]}"
+			if [ "$args" = "$line" ]; then
+				# No arguments.
+				args=
+			fi
+			eval post_handler_section "$args"
 			SECTION=post
 			> "$SPOOL/parse/post.section"
 			continue
@@ -140,6 +158,10 @@ kickseed () {
 			# Delegate to directive handlers.
 			if type "${keyword}_handler" >/dev/null 2>&1; then
 				args="${line#*[ 	]}"
+				if [ "$args" = "$line" ]; then
+					# No arguments.
+					args=
+				fi
 				# This gets ...='\$foo' wrong, but it's
 				# better than the alternative (broken
 				# crypted passwords) for now.
@@ -155,15 +177,18 @@ kickseed () {
 			fi
 
 			if [ "$keyword" = '@' ]; then
-				group="${line#* }"
+				group="${line#*[ 	]}"
 				# TODO: temporary hack to make at least the
 				# standard desktop work
 				case $group in
+					*\ Standard)
+						echo 'task:standard' >> "$SPOOL/parse/$SECTION.section"
+						;;
 					Ubuntu\ Desktop)
-						echo "~tubuntu-desktop" >> "$SPOOL/parse/$SECTION.section"
+						echo 'task:ubuntu-desktop' >> "$SPOOL/parse/$SECTION.section"
 						;;
 					Kubuntu\ Desktop)
-						echo "~tkubuntu-desktop" >> "$SPOOL/parse/$SECTION.section"
+						echo 'task:kubuntu-desktop' >> "$SPOOL/parse/$SECTION.section"
 						;;
 					*\ *)
 						warn "Package group '$group' not implemented"
@@ -173,11 +198,11 @@ kickseed () {
 						# is assumed to be the name
 						# of a task; useful for
 						# customisers.
-						echo "~t$group" >> "$SPOOL/parse/$SECTION.section"
+						echo "task:$group" >> "$SPOOL/parse/$SECTION.section"
 						;;
 				esac
 			else
-				echo "$line" >> "$SPOOL/parse/$SECTION.section"
+				echo "pkg:$line" >> "$SPOOL/parse/$SECTION.section"
 			fi
 		elif [ "$SECTION" = pre ]; then
 			# already handled
@@ -196,11 +221,14 @@ kickseed () {
 		positives=.
 		negatives=.
 		for pkg in $packages; do
-			if [ "${pkg#-}" != "$pkg" ]; then
-				negatives="$negatives ${pkg#-}"
-			else
-				positives="$positives $pkg"
-			fi
+			case $pkg in
+				task:-*|pkg:-*)
+					negatives="$negatives $pkg"
+					;;
+				*)
+					positives="$positives $pkg"
+					;;
+			esac
 		done
 
 		# pattern gets: (~nPOS|~nPOS|~nPOS)!~nNEG!~nNEG!~nNEG
@@ -208,30 +236,46 @@ kickseed () {
 		for pkg in $positives; do
 			case $pkg in
 				.)	continue ;;
-				~t*)	element="$pkg" ;;
-				*)	element="~n$pkg" ;;
+				task:*)
+					element="~t^${pkg#task:}\$"
+					tasklist="${tasklist:+$tasklist, }${pkg#task:}"
+					;;
+				pkg:*)
+					element="~n^${pkg#pkg:}\$"
+					packagelist="${packagelist:+$packagelist }${pkg#pkg:}"
+					;;
 			esac
 			joinpositives="${joinpositives:+$joinpositives|}$element"
 		done
 		pattern="($joinpositives)"
+		hasnegatives=false
 		for pkg in $negatives; do
 			case $pkg in
 				.)	continue ;;
-				~t*)	element="$pkg" ;;
-				*)	element="~n$pkg" ;;
+				task:-*)
+					element="~t^${pkg#task:-}\$"
+					hasnegatives=:
+					;;
+				pkg:-*)
+					element="~n^${pkg#pkg:-}\$"
+					hasnegatives=:
+					;;
 			esac
 			pattern="$pattern!$element"
 		done
-		# introduced in base-config 2.61ubuntu2; Debian would need
-		# tasksel preseeding instead
-		ks_preseed base-config base-config/package-selection string \
-			"$pattern"
+		# requires pkgsel 0.04ubuntu1; obsolete as of pkgsel
+		# 0.07ubuntu1
+		ks_preseed d-i pkgsel/install-pattern string "$pattern"
+		# requires pkgsel 0.07ubuntu1/0.08
+		ks_preseed tasksel tasksel/first multiselect "$tasklist"
+		ks_preseed d-i pkgsel/include string "$packagelist"
+		if $hasnegatives; then
+			warn "exclusions in %packages not supported; remove them manually in %post instead"
+		fi
 	fi
 
 	# Kickstart installations always run at critical priority.
 	ks_preseed d-i debconf/priority 'select' critical
-	# TODO: not in Debian
-	ks_preseed base-config base-config/priority 'select' critical
 }
 
 kickseed_post () {
@@ -240,7 +284,7 @@ kickseed_post () {
 		[ -d "$dir" ] || continue
 		name="${dir##*/}"
 		if type "${name%.handler}_post" >/dev/null 2>&1; then
-			eval "${name%.handler}_post"
+			ks_run_handler "${name%.handler}_post"
 		else
 			warn "Missing post-installation handler: $name"
 		fi
@@ -254,6 +298,12 @@ kickseed_post () {
 		if [ -e "${script%.script}.chroot" ]; then
 			CHROOTED=1
 		fi
-		ks_run_script post /bin/sh "$CHROOTED" "$script"
+		INTERPRETER=/bin/sh
+		if [ -e "${script%.script}.interpreter" ]; then
+			INTERPRETER="$(cat "${script%.script}.interpreter")"
+		fi
+		if ! ks_run_script post "$INTERPRETER" "$CHROOTED" "$script"; then
+			warn "%post script exited with error code $?"
+		fi
 	done
 }

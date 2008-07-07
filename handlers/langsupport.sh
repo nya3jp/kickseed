@@ -16,16 +16,34 @@ langsupport_handler () {
 	done
 
 	if [ $# -eq 0 ]; then
-		warn "langsupport command requires at least one language"
-		return
+		# Support all locales (per the Red Hat Kickstart
+		# documentation). Yes, this will be slow.
+		languages=
+		for l in $(grep -v '\.UTF-8@euro$' "$SUPPORTEDLOCALES"); do
+			languages="${languages:+$languages, }$l"
+		done
+		# Per Anaconda, default to en_US.UTF-8 if there's no default
+		# set.
+		if [ -z "$langsupport_default" ]; then
+			langsupport_default=en_US.UTF-8
+		fi
+	else
+		languages="$(echo "$*" | sed 's/ /, /g')"
+
+		# If there's a default, support that too; otherwise, the
+		# first locale selected is the default.
+		# (According to the Red Hat Kickstart documentation, it's an
+		# error not to specify a default when asking for support for
+		# more than one locale; however, Anaconda just picks the
+		# first one, so we'll go with that.)
+		if [ "$langsupport_default" ]; then
+			languages="$langsupport_default, $languages"
+		else
+			langsupport_default="$1"
+		fi
 	fi
 
-	languages="$(echo "$*" | sed 's/ /, /g')"
-	if [ "$langsupport_default" ]; then
-		languages="$langsupport_default, $languages"
-	fi
-
-	# requires localechooser 0.04.0ubuntu4
+	# requires localechooser 0.06
 	ks_preseed d-i localechooser/supported-locales multiselect "$languages"
 }
 

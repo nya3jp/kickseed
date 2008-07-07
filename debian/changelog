@@ -1,3 +1,280 @@
+kickseed (0.50) unstable; urgency=low
+
+  * Use new mountmedia command, instead of mountfloppy.
+  * load-floppy renamed to load-media.
+
+ -- Joey Hess <joeyh@debian.org>  Mon, 07 Jul 2008 14:10:57 -0400
+
+kickseed (0.49) unstable; urgency=low
+
+  * Adjust 'bootloader --md5pass' for changes in grub-installer 1.31
+    (LP: #221501).
+  * Use 'sed -i' to change /target/etc/nsswitch.conf (thanks, Christer
+    Edwards).
+
+ -- Colin Watson <cjwatson@debian.org>  Sun, 01 Jun 2008 14:15:11 +0100
+
+kickseed (0.48) unstable; urgency=low
+
+  [ Colin Watson ]
+  * Allow 'preseed' to take just two arguments, equivalent to an empty
+    value.
+
+ -- Otavio Salvador <otavio@debian.org>  Fri, 15 Feb 2008 11:05:25 -0200
+
+kickseed (0.47) unstable; urgency=low
+
+  * Set Maintainer to debian-boot.
+  * Use in-target to run chrooted %post scripts.
+  * Use /lib/partman/display.d rather than /lib/partman/auto.d.
+
+ -- Colin Watson <cjwatson@debian.org>  Sun, 28 Oct 2007 15:26:48 +0000
+
+kickseed (0.46) unstable; urgency=low
+
+  * Moved to d-i SVN; maintaining it here henceforth.
+  * Update copyright dates.
+  * Remove Ubuntu-specific hostname in setup/net.
+  * Unbrand an Ubuntu-specific error message.
+  * Remove some old base-config cruft.
+  * The Ubuntu standard tasks are now just called 'standard', and this makes
+    more sense for Debian too.
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 05 Oct 2007 14:49:18 +0100
+
+kickseed (0.45) gutsy; urgency=low
+
+  * Make ksdevice=link equivalent to leaving out ksdevice, since that's
+    netcfg's default behaviour.
+  * Make ksdevice=bootif emit a warning and be equivalent to leaving out
+    ksdevice for now. Once netcfg supports being preseeded with a MAC
+    address, this can be supported.
+  * Support 'part swap --recommended' (thanks, Rohit Kumar Mehta).
+  * I'm not sure how swap partition preseeding ever worked, because the
+    filesystem slot in the recipe is supposed to be "linux-swap", not
+    "swap". Fixed.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed, 13 Jun 2007 21:50:01 +0100
+
+kickseed (0.44) feisty; urgency=low
+
+  * Support --interpreter for %post scripts without --nochroot (pointed out
+    by Jérôme Benois).
+  * Fix broken %post argument parsing.
+  * Run kickseed_post in test-kickseed again; this time, print a notice when
+    a post-installation handler would be run.
+  * Add Lintian override for no-standards-version-field; udebs don't need
+    that.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed, 13 Dec 2006 10:01:36 +0000
+
+kickseed (0.43) feisty; urgency=low
+
+  * Handle /dev/ prefix on clearpart --drives transparently.
+  * Try to install fs-core-modules and fs-secondary-modules for ext2 and
+    vfat support (udebs renamed in Ubuntu feisty).
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Mon,  4 Dec 2006 09:47:38 +0000
+
+kickseed (0.42) feisty; urgency=low
+
+  * 'clearpart' preseeds partman-auto/method, needed as of partman-auto 55.
+  * finish-install.d/01kickseed: Provide a ks_log hook.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed, 29 Nov 2006 15:24:27 +0000
+
+kickseed (0.41) edgy; urgency=low
+
+  * Move from /usr/lib/prebaseconfig.d to /usr/lib/finish-install.d.
+  * Make 'reboot' preseed finish-install/reboot_in_progress as well as
+    prebaseconfig/reboot_in_progress (closes: Malone #65561).
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed, 11 Oct 2006 22:30:44 +0100
+
+kickseed (0.40) edgy; urgency=low
+
+  * Handle Kickstart files with DOS line endings (see Malone #61576).
+  * test-kickseed: Adjust mktemp call to work with busybox.
+  * Make 'clearpart --all' write out a partman auto.d script to clear the
+    first disk, since /dev/discs/disc0/disc isn't available any more and
+    there's no single static alternative (closes: Malone #61576).
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed,  4 Oct 2006 20:30:23 +0100
+
+kickseed (0.39) edgy; urgency=low
+
+  * test-kickseed: Explicitly source kickseed.sh from current directory.
+  * Update keyboard handling for console-setup; note that keymap names have
+    changed from Dapper and earlier, and that layout_variant (e.g. in_guj)
+    keymap names may be used (closes: Malone #61573).
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Fri, 22 Sep 2006 16:20:30 +0100
+
+kickseed (0.38) edgy; urgency=low
+
+  * Allow Kickstart commands and arguments to be separated by tabs as well
+    as spaces (closes: Malone #49438).
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed, 23 Aug 2006 08:47:26 +0100
+
+kickseed (0.37) edgy; urgency=low
+
+  * Update %packages preseeding for pkgsel 0.07ubuntu1 (revive-tasksel).
+    Issue a warning if exclusions are used, since they are no longer
+    supported.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed, 26 Jul 2006 14:06:02 +0100
+
+kickseed (0.36) edgy; urgency=low
+
+  * Upload changes from dapper-updates to edgy.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Mon, 10 Jul 2006 17:22:25 +0100
+
+kickseed (0.35.2) dapper-updates; urgency=low
+
+  [Colin Watson]
+  * Don't run kickseed_post in test-kickseed.
+
+  [Scott James Remnant]
+  * Fix passwd/root-login preseeding harder; additional instance of the
+    fix for #48038.
+
+ -- Scott James Remnant <scott@ubuntu.com>  Sun, 11 Jun 2006 17:22:59 +0100
+
+kickseed (0.35.1) dapper-updates; urgency=low
+
+  * Fix passwd/root-login preseeding (closes: Malone #48038).
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Mon,  5 Jun 2006 02:22:10 +0100
+
+kickseed (0.35) dapper; urgency=low
+
+  * Preseed passwd/root-login depending on whether the root password is
+    disabled, to cope with user-setup 1.1.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Mon, 15 May 2006 15:08:53 +0100
+
+kickseed (0.34) dapper; urgency=low
+
+  * setup/hd: Install disk-detect rather than hw-detect-full.
+  * Adapt %packages handling to pkgsel.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Thu, 12 Jan 2006 22:50:32 +0000
+
+kickseed (0.33) dapper; urgency=low
+
+  * Fix %packages handling to account for names in aptitude patterns really
+    being unanchored regular expressions.
+  * Update crypted user and root password handling for passwd 1:4.0.13-5.
+    This is incompatible with older versions of passwd.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Sun, 11 Dec 2005 10:34:13 +0000
+
+kickseed (0.32) dapper; urgency=low
+
+  * Use log-output so that log messages go to syslog and are tagged as
+    coming from kickseed.
+  * Simplify prebaseconfig script.
+  * Remove Standards-Version:, not applicable to udebs.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Thu, 27 Oct 2005 12:44:49 +0100
+
+kickseed (0.31) breezy; urgency=low
+
+  * Add "Ubuntu Standard" and "Kubuntu Standard" package groups, which
+    install the ubuntu-standard and kubuntu-standard tasks respectively.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Fri,  7 Oct 2005 16:38:07 +0100
+
+kickseed (0.30) breezy; urgency=low
+
+  * Fix NFS mount error dialog.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Mon,  8 Aug 2005 18:29:31 +0100
+
+kickseed (0.29) breezy; urgency=low
+
+  * Update timezone to be able to cope with clock-setup and tzsetup udebs.
+  * Display an error if we can't fetch the Kickstart file from HTTP/FTP, or
+    if we can't mount the given NFS server.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Mon,  8 Aug 2005 15:04:13 +0100
+
+kickseed (0.28) breezy; urgency=low
+
+  * Make 'lang' preseed debian-installer/locale as well as preseed/locale,
+    in order to work with localechooser >= 0.07.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Tue, 19 Jul 2005 17:23:27 +0100
+
+kickseed (0.27) breezy; urgency=low
+
+  * Use 'mount -o nolock' when retrieving Kickstart files over NFS, which is
+    massively faster since we aren't running the usual userspace support.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Mon, 20 Jun 2005 19:05:02 +0100
+
+kickseed (0.26) breezy; urgency=low
+
+  * Implement device --opts, now that hw-detect supports it.
+  * Implement bootloader --password and --md5pass options.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Mon,  6 Jun 2005 12:17:24 +0100
+
+kickseed (0.25) breezy; urgency=low
+
+  * Send stderr from %pre scripts to /var/log/messages.
+  * Don't send %post stdout to /var/log/messages, and don't truncate that
+    file!
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Fri,  6 May 2005 20:39:09 +0100
+
+kickseed (0.24) breezy; urgency=low
+
+  * Add native support for custom d-i preseeding. The syntax is 'preseed
+    [--owner PACKAGE] KEY TYPE VALUE'. The owner package defaults to "d-i".
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Thu,  5 May 2005 16:42:34 +0100
+
+kickseed (0.23) breezy; urgency=low
+
+  * Execute %pre sections without redirecting stdin, so that it's possible
+    to use debconf from them.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed,  4 May 2005 17:17:41 +0100
+
+kickseed (0.22) breezy; urgency=low
+
+  * Make sure %pre and %post scripts are executable, so that debconf can
+    re-exec them.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed,  4 May 2005 10:35:08 +0100
+
+kickseed (0.21) breezy; urgency=low
+
+  * Make 'url' preseed second-stage mirror configuration too.
+  * Replace $OPTARG with $2 everywhere; fixes 'clearpart --drives'.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Fri, 15 Apr 2005 15:05:51 +0100
+
+kickseed (0.20) breezy; urgency=low
+
+  * Send warnings during installation to syslog, not stderr.
+  * Fix handler arguments in the case where no arguments were passed to a
+    command.
+  * Fix langsupport to conform to Kickstart documentation and Anaconda.
+    - If no non-option arguments were passed to langsupport, support all
+      locales, per the Kickstart documentation. Yes, this will be slow. In
+      that case, default to en_US.UTF-8 if there's no default set either,
+      per Anaconda.
+    - Otherwise, default to the first locale selected if there's no default
+      set, per Anaconda.
+  * Tolerate %pre and %post scripts exiting non-zero (log a warning rather
+    than exiting).
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Thu, 14 Apr 2005 12:46:55 +0100
+
 kickseed (0.19) hoary; urgency=low
 
   * Very basic package group support, mapping package groups to tasks. Any
