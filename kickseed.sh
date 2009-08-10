@@ -98,8 +98,10 @@ kickseed () {
 	done < "$1"
 	if [ -e "$SPOOL/parse/pre.section" ]; then
 		chmod +x "$SPOOL/parse/pre.section"
-		if ! ks_run_script pre /bin/sh 0 "$SPOOL/parse/pre.section"; then
-			warn "%pre script exited with error code $?"
+		CODE=0
+		ks_run_script pre /bin/sh 0 "$SPOOL/parse/pre.section" || CODE="$?"
+		if [ "$CODE" != 0 ]; then
+			warn "%pre script exited with error code $CODE"
 		fi
 		rm -f "$SPOOL/parse/pre.section"
 	fi
@@ -302,8 +304,10 @@ kickseed_post () {
 		if [ -e "${script%.script}.interpreter" ]; then
 			INTERPRETER="$(cat "${script%.script}.interpreter")"
 		fi
-		if ! ks_run_script post "$INTERPRETER" "$CHROOTED" "$script"; then
-			warn "%post script exited with error code $?"
+		CODE=0
+		ks_run_script post "$INTERPRETER" "$CHROOTED" "$script" || CODE="$?"
+		if [ "$CODE" != 0 ]; then
+			warn "%post script exited with error code $CODE"
 		fi
 	done
 }

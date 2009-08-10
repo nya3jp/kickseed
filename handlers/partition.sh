@@ -1,13 +1,18 @@
 #! /bin/sh
 
 partition_recipe=
+partition_pending_lvm_recipe=
 partition_leave_free_space=1
 
-partition_handler () {
+partition_recipe_append () {
 	if [ -z "$partition_recipe" ]; then
 		partition_recipe='Kickstart-supplied partitioning scheme :'
 	fi
 
+	partition_recipe="$partition_recipe $1 ."
+}
+
+partition_handler () {
 	recommended=
 	size=
 	grow=
@@ -51,6 +56,7 @@ partition_handler () {
 				shift 2
 				;;
 			--onpart|--usepart|--ondisk|--ondrive|--start|--end)
+				# TODO: --ondisk/--ondrive supported with LVM
 				warn "unsupported restriction '$1'"
 				shift 2
 				;;
@@ -65,14 +71,43 @@ partition_handler () {
 	fi
 	mountpoint="$1"
 
-	if [ "$mountpoint" = swap ]; then
-		filesystem=linux-swap
-		mountpoint=
-	elif [ "$fstype" ]; then
-		filesystem="$fstype"
-	else
-		filesystem=ext3
-	fi
+	parttype=normal
+	case $mountpoint in
+		swap)
+			filesystem=linux-swap
+			mountpoint=
+			;;
+		pv.*)
+			# LVM physical volume
+			parttype=lvm
+			pvname="$mountpoint"
+			format=
+			if [ "$fstype" ]; then
+				filesystem="$fstype"
+			else
+				filesystem=ext3
+			fi
+			mountpoint=
+			;;
+		raid.*)
+			# RAID physical volume
+			parttype=raid
+			format=
+			if [ "$fstype" ]; then
+				filesystem="$fstype"
+			else
+				filesystem=ext3
+			fi
+			mountpoint=
+			;;
+		*)
+			if [ "$fstype" ]; then
+				filesystem="$fstype"
+			else
+				filesystem=ext3
+			fi
+			;;
+	esac
 
 	if [ "$filesystem" = linux-swap ] && [ "$recommended" ]; then
 		size=96
@@ -87,42 +122,57 @@ partition_handler () {
 		if [ "$grow" ]; then
 			partition_leave_free_space=
 			if [ -z "$maxsize" ]; then
-				maxsize=$((1024 * 1024 * 1024))
+				priority=$((1024 * 1024 * 1024))
+				# requires partman-auto 84, partman-auto-lvm 32
+				maxsize=-1
+			else
+				priority="$maxsize"
 			fi
-			priority="$maxsize"
 		else
 			maxsize="$size"
 			priority="$size"
 		fi
 	fi
-	partition_recipe="$partition_recipe $size $priority $maxsize $filesystem"
+	new_recipe="$size $priority $maxsize $filesystem"
 
 	if [ "$asprimary" ]; then
-		partition_recipe="$partition_recipe \$primary{ }"
+		new_recipe="$new_recipe \$primary{ }"
 	fi
 
-	if [ "$filesystem" = linux-swap ]; then
-		partition_recipe="$partition_recipe method{ swap }"
+	if [ "$parttype" = lvm ]; then
+		new_recipe="$new_recipe \$defaultignore{ } method{ lvm }"
+	elif [ "$filesystem" = linux-swap ]; then
+		new_recipe="$new_recipe method{ swap }"
 	elif [ "$format" ]; then
-		partition_recipe="$partition_recipe method{ format }"
+		new_recipe="$new_recipe method{ format }"
 	else
-		partition_recipe="$partition_recipe method{ keep }"
+		new_recipe="$new_recipe method{ keep }"
 	fi
 
 	if [ "$format" ]; then
-		partition_recipe="$partition_recipe format{ }"
+		new_recipe="$new_recipe format{ }"
 	fi
 
-	if [ "$filesystem" != linux-swap ]; then
-		partition_recipe="$partition_recipe use_filesystem{ }"
-		partition_recipe="$partition_recipe filesystem{ $filesystem }"
+	if [ "$parttype" = normal ] && [ "$filesystem" != linux-swap ]; then
+		new_recipe="$new_recipe use_filesystem{ }"
+		new_recipe="$new_recipe filesystem{ $filesystem }"
 	fi
 
 	if [ "$mountpoint" ]; then
-		partition_recipe="$partition_recipe mountpoint{ $mountpoint }"
+		new_recipe="$new_recipe mountpoint{ $mountpoint }"
 	fi
 
-	partition_recipe="$partition_recipe ."
+	case $parttype in
+		normal)
+			partition_recipe_append "$new_recipe"
+			;;
+		lvm)
+			partition_pending_lvm_recipe="$partition_pending_lvm_recipe $new_recipe \$pending_lvm{ $pvname } ."
+			;;
+		raid)
+			warn "raid not supported yet"
+			;;
+	esac
 }
 
 part_handler () {
@@ -136,7 +186,8 @@ partition_final () {
 			# partition at the end of the disk. Bug filed on
 			# partman-auto.
 			bignum=$((1024 * 1024 * 1024))
-			partition_recipe="$partition_recipe 0 $bignum $bignum free ."
+			# requires partman-auto 84, partman-auto-lvm 32
+			partition_recipe="$partition_recipe 0 $bignum -1 free ."
 		fi
 		ks_preseed d-i partman-auto/expert_recipe string \
 			"$partition_recipe"

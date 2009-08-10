@@ -1,3 +1,35 @@
+kickseed (0.53) unstable; urgency=low
+
+  * Implement 'halt' and 'poweroff'.
+  * Override not-using-po-debconf Lintian tag. All our templates are
+    intentionally untranslatable.
+  * Drop no-standards-version-field override, which Lintian no longer emits
+    for udebs.
+  * Upgrade to debhelper v7.
+  * Implement 'repo', with some Debian extensions to handle the sources.list
+    format.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Mon, 10 Aug 2009 15:23:12 +0100
+
+kickseed (0.52) unstable; urgency=low
+
+  [ Colin Watson ]
+  * Fix exit code handling from ks_run_script.
+
+ -- Christian Perrier <bubulle@debian.org>  Thu, 11 Jun 2009 22:05:24 +0200
+
+kickseed (0.51) unstable; urgency=low
+
+  * Add initial LVM support (LP: #120377). There are probably still some
+    warts here.
+  * Use new-style "-1" instead of a big number (1024 * 1024 * 1024) to
+    indicate unlimited partition size in partman recipes, following
+    partman-auto 84 and partman-auto-lvm 32.
+  * Use my Ubuntu e-mail address in Uploaders, since I usually work on this
+    on work time.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed, 18 Feb 2009 23:54:50 +0000
+
 kickseed (0.50) unstable; urgency=low
 
   * Use new mountmedia command, instead of mountfloppy.
