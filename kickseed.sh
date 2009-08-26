@@ -13,6 +13,8 @@ fi
 if [ -z "$SUPPORTEDLOCALES" ]; then
 	SUPPORTEDLOCALES=/etc/SUPPORTED-short
 fi
+NL='
+'
 
 warn () {
 	ks_log "$@"

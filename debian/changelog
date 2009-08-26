@@ -1,3 +1,9 @@
+kickseed (0.53ubuntu1) karmic; urgency=low
+
+  * Add basic RAID support. (LVM-on-RAID won't quite work yet.)
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed, 26 Aug 2009 23:37:54 +0100
+
 kickseed (0.53) unstable; urgency=low
 
   * Implement 'halt' and 'poweroff'.

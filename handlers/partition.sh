@@ -3,6 +3,8 @@
 partition_recipe=
 partition_pending_lvm_recipe=
 partition_leave_free_space=1
+partition_raid=
+partition_final_done=
 
 partition_recipe_append () {
 	if [ -z "$partition_recipe" ]; then
@@ -20,6 +22,7 @@ partition_handler () {
 	format=1
 	asprimary=
 	fstype=
+	ondisk=
 
 	eval set -- "$(getopt -o '' -l recommended,size:,grow,maxsize:,noformat,onpart:,usepart:,ondisk:,ondrive:,asprimary,fstype:,start:,end: -- "$@")" || { warn_getopt partition; return; }
 	while :; do
@@ -55,9 +58,12 @@ partition_handler () {
 				fstype="$2"
 				shift 2
 				;;
-			--onpart|--usepart|--ondisk|--ondrive|--start|--end)
-				# TODO: --ondisk/--ondrive supported with LVM
+			--onpart|--usepart|--start|--end)
 				warn "unsupported restriction '$1'"
+				shift 2
+				;;
+			--ondisk|--ondrive)
+				ondisk="${2#/dev/}"
 				shift 2
 				;;
 			--)	shift; break ;;
@@ -92,6 +98,7 @@ partition_handler () {
 		raid.*)
 			# RAID physical volume
 			parttype=raid
+			raidname="$mountpoint"
 			format=
 			if [ "$fstype" ]; then
 				filesystem="$fstype"
@@ -108,6 +115,16 @@ partition_handler () {
 			fi
 			;;
 	esac
+
+	if [ "$parttype" != raid ] && [ "$ondisk" ]; then
+		# TODO: --ondisk/--ondrive supported with LVM too
+		warn "unsupported restriction 'ondisk' for non-RAID"
+		return
+	fi
+	if [ "$parttype" = raid ] && [ -z "$ondisk" ]; then
+		warn "RAID partitioning requires --ondisk"
+		return
+	fi
 
 	if [ "$filesystem" = linux-swap ] && [ "$recommended" ]; then
 		size=96
@@ -141,6 +158,8 @@ partition_handler () {
 
 	if [ "$parttype" = lvm ]; then
 		new_recipe="$new_recipe \$defaultignore{ } method{ lvm }"
+	elif [ "$parttype" = raid ]; then
+		new_recipe="$new_recipe \$lvmignore{ } method{ raid } \$raidname{ $raidname }"
 	elif [ "$filesystem" = linux-swap ]; then
 		new_recipe="$new_recipe method{ swap }"
 	elif [ "$format" ]; then
@@ -170,7 +189,9 @@ partition_handler () {
 			partition_pending_lvm_recipe="$partition_pending_lvm_recipe $new_recipe \$pending_lvm{ $pvname } ."
 			;;
 		raid)
-			warn "raid not supported yet"
+			echo "$new_recipe" >>"$SPOOL/parse/partition.raid.$ondisk"
+			partition_recipe_append "$new_recipe \$raid_ondisk{ $ondisk }"
+			partition_raid=1
 			;;
 	esac
 }
@@ -180,6 +201,78 @@ part_handler () {
 }
 
 partition_final () {
+	# guard so that raid_final can make sure we've been run
+	[ -z "$partition_final_done" ] || return
+
+	if [ "$partition_raid" ]; then
+		compare=
+		for file in "$SPOOL/parse/partition.raid".*; do
+			[ -f "$file" ] || continue
+			recipe="$(sed 's/ \$raidname{ [^}]* }//' "$file")"
+			raidnames=
+			for raidname in $(sed -n 's/.* \$raidname{ \([^}]*\) }.*/\1/p' "$file"); do
+				raidnames="${raidnames:+$raidnames }$raidname"
+			done
+			if [ "$compare" ]; then
+				if [ "$recipe" != "$compare" ]; then
+					warn "RAID recipes for each disk must be identical: '$recipe' != '$compare'"
+					return
+				fi
+			else
+				compare="$recipe"
+				want_ondisk="${file#$SPOOL/parse/partition.raid.}"
+				primary_raidnames="$raidnames"
+			fi
+			for primary_raidname in $primary_raidnames; do
+				echo "${raidnames%% *}" >>"$SPOOL/parse/partition.raidnames.$primary_raidname"
+				raidnames="${raidnames#* }"
+			done
+		done
+
+		# leave only one "ondisk" set, but preserve the ordering
+		partition_new_recipe=
+		set -- $partition_recipe
+		got_ondisk=
+		got_raidname=
+		raidid=1
+		line=
+		rest=
+		while [ "$1" ]; do
+			case $1 in
+				\$raidname{)
+					shift
+					got_raidname="$1"
+					shift
+					;;
+				\$raid_ondisk{)
+					shift
+					got_ondisk="$1"
+					shift
+					;;
+				.)
+					if [ -z "$got_ondisk" ] || [ "$want_ondisk" = "$got_ondisk" ]; then
+						if [ "$got_raidname" ]; then
+							line="${line:+$line }raidid{ $raidid }"
+							for raidname in $(cat "$SPOOL/parse/partition.raidnames.$got_raidname"); do
+								echo "$raidid" >>"$SPOOL/parse/partition.raididmap.$raidname"
+							done
+							raidid="$(($raidid + 1))"
+						fi
+						partition_new_recipe="${partition_new_recipe:+$partition_new_recipe }$line ."
+					fi
+					line=
+					got_raidname=
+					got_ondisk=
+					;;
+				*)
+					line="${line:+$line }$1"
+					;;
+			esac
+			shift
+		done
+		partition_recipe="$partition_new_recipe"
+	fi
+
 	if [ "$partition_recipe" ]; then
 		if [ "$partition_leave_free_space" ]; then
 			# This doesn't quite work; it leaves a dummy
@@ -195,6 +288,8 @@ partition_final () {
 			'Finish partitioning and write changes to disk'
 		ks_preseed d-i partman/confirm boolean true
 	fi
+
+	partition_final_done=1
 }
 
 register_final partition_final
