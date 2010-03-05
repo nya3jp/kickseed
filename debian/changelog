@@ -1,3 +1,13 @@
+kickseed (0.53ubuntu3) lucid; urgency=low
+
+  * Preseed base-installer/kernel/backports-modules to 'nouveau' if
+    installing a desktop task, as a partial workaround for problems
+    elsewhere (LP: #526422).
+  * Be lenient if the Kickstart file author forgets the required space after
+    '@' in a %packages section (LP: #419392).
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Fri, 05 Mar 2010 15:03:32 +0000
+
 kickseed (0.53ubuntu2) lucid; urgency=low
 
   * Add basic iSCSI support.
