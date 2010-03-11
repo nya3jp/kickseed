@@ -248,12 +248,6 @@ kickseed () {
 				task:*)
 					element="~t^${pkg#task:}\$"
 					tasklist="${tasklist:+$tasklist, }${pkg#task:}"
-					case ${pkg#task:} in
-						*-desktop*)
-							# work around https://bugs.launchpad.net/bugs/526422
-							ks_preseed d-i base-installer/kernel/backports-modules string nouveau
-							;;
-					esac
 					;;
 				pkg:*)
 					element="~n^${pkg#pkg:}\$"

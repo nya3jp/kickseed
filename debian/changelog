@@ -1,3 +1,10 @@
+kickseed (0.53ubuntu4) lucid; urgency=low
+
+  * Drop nouveau preseeding, no longer needed with the drm backport in
+    2.6.32-16 kernels.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Thu, 11 Mar 2010 14:23:46 +0000
+
 kickseed (0.53ubuntu3) lucid; urgency=low
 
   * Preseed base-installer/kernel/backports-modules to 'nouveau' if
