@@ -1,3 +1,22 @@
+kickseed (0.54ubuntu1) lucid; urgency=low
+
+  * Resynchronise with Debian.  Remaining changes:
+    - Add basic RAID support.  (LVM-on-RAID won't quite work yet.)
+    - Add basic iSCSI support.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Mon, 29 Mar 2010 00:37:53 +0100
+
+kickseed (0.54) unstable; urgency=low
+
+  * Add Vcs-Svn field.
+  * Add notes about why templates are untranslatable.
+  * Only preseed partman-lvm/confirm if the logvol command was used.
+  * Preseed partman/confirm_nooverwrite as well as partman/confirm.
+  * Be lenient if the Kickstart file author forgets the required space after
+    '@' in a %packages section (LP: #419392).
+
+ -- Colin Watson <cjwatson@debian.org>  Sat, 27 Mar 2010 23:49:22 +0000
+
 kickseed (0.53ubuntu4) lucid; urgency=low
 
   * Drop nouveau preseeding, no longer needed with the drm backport in
