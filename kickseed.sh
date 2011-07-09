@@ -79,7 +79,7 @@ kickseed () {
 
 	# Parse and execute %pre sections first.
 	SECTION=main
-	while read line; do
+	while read -r line; do
 		line="${line%%}"
 		keyword="${line%%[ 	]*}"
 		case $keyword in
@@ -110,7 +110,7 @@ kickseed () {
 
 	# Parse all other sections.
 	SECTION=main
-	(while read line; do
+	(while read -r line; do
 		line="${line%%}"
 		keyword="${line%%[ 	]*}"
 		# Deal with %include directives.
@@ -123,7 +123,7 @@ kickseed () {
 		else
 			echo "$line"
 		fi
-	done < "$1"; echo %final) | while read line; do
+	done < "$1"; echo %final) | while read -r line; do
 		# Work out the section.
 		keyword="${line%%[ 	]*}"
 		if [ "$keyword" = '%packages' ]; then
