@@ -70,14 +70,14 @@ iscsi_handler () {
 		return
 	fi
 
-	ks_preseed d-i partman-iscsi/login/address "$ipaddr${port:+:$port}"
+	ks_preseed d-i partman-iscsi/login/address string "$ipaddr${port:+:$port}"
 	if [ "$user" ]; then
-		ks_preseed d-i partman-iscsi/login/username "$user"
-		ks_preseed d-i partman-iscsi/login/password "$password"
+		ks_preseed d-i partman-iscsi/login/username string "$user"
+		ks_preseed d-i partman-iscsi/login/password password "$password"
 		if [ "$reverse_user" ]; then
-			ks_preseed d-i partman-iscsi/login/incoming_username "$reverse_user"
-			ks_preseed d-i partman-iscsi/login/incoming_password "$reverse_password"
+			ks_preseed d-i partman-iscsi/login/incoming_username string "$reverse_user"
+			ks_preseed d-i partman-iscsi/login/incoming_password password "$reverse_password"
 		fi
 	fi
-	ks_preseed d-i partman-iscsi/login/all_targets true
+	ks_preseed d-i partman-iscsi/login/all_targets boolean true
 }
