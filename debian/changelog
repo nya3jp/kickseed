@@ -1,3 +1,19 @@
+kickseed (0.57ubuntu1) precise; urgency=low
+
+  * Resynchronise with Debian.  Remaining changes:
+    - Add basic RAID support.  (LVM-on-RAID won't quite work yet.)
+    - Add basic iSCSI support.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Tue, 06 Mar 2012 11:40:10 +0000
+
+kickseed (0.57) unstable; urgency=low
+
+  * Disable kickseed for now when using the GTK frontend, as otherwise it
+    starts up an initial X client which exits quickly and causes the Xserver
+    to exit (LP: #939278).
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Tue, 06 Mar 2012 11:34:27 +0000
+
 kickseed (0.56ubuntu2) oneiric; urgency=low
 
   * Fix iSCSI ks_preseed calls to include a type field (LP: #810068).
