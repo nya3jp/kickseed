@@ -1,3 +1,28 @@
+kickseed (0.59ubuntu1) saucy; urgency=low
+
+  * Resynchronise with Debian.  Remaining changes:
+    - Add basic RAID support.  (LVM-on-RAID won't quite work yet.)
+    - Add basic iSCSI support.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Tue, 23 Jul 2013 00:00:41 +0100
+
+kickseed (0.59) unstable; urgency=low
+
+  [ Dmitrijs Ledkovs ]
+  * Set debian source format to '3.0 (native)'.
+  * Bump debhelper compat level to 9.
+  * Set Vcs-* to canonical format.
+  * Drop XC- from Package-Type field.
+
+  [ Colin Watson ]
+  * Move debian/source.lintian-overrides to preferred location of
+    debian/source/lintian-overrides.
+
+  [ Christian Perrier ]
+  * Add myself to Uploaders
+
+ -- Christian Perrier <bubulle@debian.org>  Sun, 14 Jul 2013 13:11:39 +0200
+
 kickseed (0.58ubuntu1) quantal; urgency=low
 
   * Resynchronise with Debian.  Remaining changes:
