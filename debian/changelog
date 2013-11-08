@@ -1,3 +1,18 @@
+kickseed (0.60ubuntu1) trusty; urgency=low
+
+  * Resynchronise with Debian.  Remaining changes:
+    - Add basic RAID support.  (LVM-on-RAID won't quite work yet.)
+    - Add basic iSCSI support.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Fri, 08 Nov 2013 12:30:00 +0000
+
+kickseed (0.60) unstable; urgency=low
+
+  * Preseed netcfg/disable_autoconfig rather than deprecated
+    netcfg/disable_dhcp (LP: #879605).
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 08 Nov 2013 12:23:31 +0000
+
 kickseed (0.59ubuntu1) saucy; urgency=low
 
   * Resynchronise with Debian.  Remaining changes:

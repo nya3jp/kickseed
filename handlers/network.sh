@@ -13,7 +13,7 @@ network_handler () {
 					dhcp|bootp)
 						;;
 					static)
-						ks_preseed d-i netcfg/disable_dhcp boolean true
+						ks_preseed d-i netcfg/disable_autoconfig boolean true
 						;;
 					*)
 						warn_bad_arg network bootproto "$2"
