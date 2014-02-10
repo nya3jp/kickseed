@@ -23,7 +23,7 @@ case $KS in
 	cdrom:/*)
 		bterm_run /lib/kickseed/setup/cdrom || true
 		;;
-	ftp://*/*|http://*/*)
+	ftp://*/*|http://*/*|https://*/*)
 		bterm_run /lib/kickseed/setup/net || true
 		;;
 	hd:*:/*)

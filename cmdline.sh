@@ -50,6 +50,11 @@ kickseed_file () {
 			mkdir -p "${spoolpath%/*}"
 			echo "$spoolpath"
 			;;
+		https://*/*)
+			spoolpath="$SPOOL/fetch/https/${1#https://}"
+			mkdir -p "${spoolpath%/*}"
+			echo "$spoolpath"
+			;;
 		nfs:*:/*)
 			file="${1#nfs:}"
 			server="${file%%:*}"

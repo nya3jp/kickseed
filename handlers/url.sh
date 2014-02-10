@@ -10,6 +10,9 @@ url_handler () {
 					http://*/*)
 						protocol=http
 						;;
+					https://*/*)
+						protocol=https
+						;;
 					ftp://*/*)
 						protocol=ftp
 						;;

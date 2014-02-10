@@ -1,3 +1,19 @@
+kickseed (0.61ubuntu1) trusty; urgency=medium
+
+  * Resynchronise with Debian.  Remaining changes:
+    - Add basic RAID support.  (LVM-on-RAID won't quite work yet.)
+    - Add basic iSCSI support.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Mon, 10 Feb 2014 19:44:28 +0000
+
+kickseed (0.61) unstable; urgency=medium
+
+  * Add HTTPS support, which will only work if d-i has been built with GNU
+    wget (LP: #833994).  "url https://..." requires further work in at least
+    choose-mirror before it will be usable.
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 10 Feb 2014 18:59:53 +0000
+
 kickseed (0.60ubuntu1) trusty; urgency=low
 
   * Resynchronise with Debian.  Remaining changes:
